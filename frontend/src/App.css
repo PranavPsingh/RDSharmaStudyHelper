@@ -65,6 +65,17 @@ select, button {
 
 .controls button:disabled { opacity: 0.6; cursor: wait; }
 
+.result-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.print-button {
+  cursor: pointer;
+}
+
 .error { color: var(--hard); }
 .summary { color: var(--fg); opacity: 0.7; }
 
@@ -115,8 +126,84 @@ button.link {
   cursor: pointer;
 }
 
+.password-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.password-form label {
+  flex-basis: 100%;
+}
+
+.password-form input {
+  min-width: 0;
+  font: inherit;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+.password-form button {
+  cursor: pointer;
+}
+
+.password-form .error {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .answer pre {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 8px 0;
+}
+
+@media print {
+  :root {
+    --fg: #000;
+    --card: #fff;
+    --border: #bbb;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+
+  main {
+    max-width: none;
+    padding: 0;
+  }
+
+  .controls,
+  .error,
+  .print-button,
+  .answer-control,
+  .answer {
+    display: none !important;
+  }
+
+  .result-actions {
+    display: block;
+  }
+
+  .questions {
+    display: block;
+  }
+
+  .card {
+    break-inside: avoid;
+    margin-bottom: 12px;
+    border-radius: 0;
+  }
+
+  .diagram img {
+    max-height: 240px;
+  }
 }
