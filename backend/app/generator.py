@@ -84,7 +84,16 @@ Rules:
 - Stay within the textbook's syllabus for that chapter.
 - Every question must be solvable and have one correct final answer. Verify your arithmetic.
 - Write maths in plain text/unicode (e.g. x^2, sqrt(3), π, ≤). No LaTeX, no markdown.
-- "solution" is a short step-by-step working. "final_answer" is just the answer.
+- "solution" must be a complete, easy-to-follow school-textbook worked solution, not a summary.
+  Show every meaningful step needed to get from the question to the result; do not skip algebra,
+  arithmetic, substitutions, or reasoning with phrases such as "after simplification" or "similarly".
+  State the formula, theorem, or method being used, substitute the given values, show intermediate
+  calculations and transformations on separate lines, and explain why each non-obvious step follows.
+  For proofs, give each inference with its reason. Keep units with quantities and include a check
+  of the result where practical. Number the working as "Step 1:", "Step 2:", etc. Use enough steps
+  for the question's difficulty: concise but complete for 1-mark questions, and progressively more
+  detailed for 3- and 5-mark questions. "final_answer" is only the clearly stated result, not the
+  working.
 - Return the slot number with each question.
 
 DIAGRAMS. For each question decide whether a figure is needed. Add one when the question refers
