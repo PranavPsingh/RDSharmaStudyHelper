@@ -12,7 +12,7 @@ def _reader() -> PdfReader:
     if not TEXTBOOK_PDF.exists():
         raise FileNotFoundError(
             f"Textbook PDF not found at {TEXTBOOK_PDF}. Put it in data/textbook.pdf "
-            "or set TEXTBOOK_PDF in .env."
+            "under backend/ or set TEXTBOOK_PDF in .env."
         )
     return PdfReader(str(TEXTBOOK_PDF))
 
