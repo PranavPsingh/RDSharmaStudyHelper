@@ -1,0 +1,31 @@
+{
+  "last_page": 249,
+  "unit_marks": {
+    "Number Systems": 6,
+    "Algebra": 20,
+    "Coordinate Geometry": 6,
+    "Geometry": 15,
+    "Trigonometry": 12,
+    "Mensuration": 10,
+    "Statistics & Probability": 11,
+    "Appendices (optional)": 2
+  },
+  "chapters": [
+    { "id": 1,  "title": "Real Numbers",                          "start_page": 1,   "unit": "Number Systems" },
+    { "id": 2,  "title": "Polynomials",                           "start_page": 10,  "unit": "Algebra" },
+    { "id": 3,  "title": "Pair of Linear Equations in Two Variables", "start_page": 24, "unit": "Algebra" },
+    { "id": 4,  "title": "Quadratic Equations",                   "start_page": 38,  "unit": "Algebra" },
+    { "id": 5,  "title": "Arithmetic Progressions",               "start_page": 49,  "unit": "Algebra" },
+    { "id": 6,  "title": "Triangles",                             "start_page": 73,  "unit": "Geometry" },
+    { "id": 7,  "title": "Coordinate Geometry",                   "start_page": 99,  "unit": "Coordinate Geometry" },
+    { "id": 8,  "title": "Introduction to Trigonometry",          "start_page": 113, "unit": "Trigonometry" },
+    { "id": 9,  "title": "Some Applications of Trigonometry",     "start_page": 133, "unit": "Trigonometry" },
+    { "id": 10, "title": "Circles",                               "start_page": 144, "unit": "Geometry" },
+    { "id": 11, "title": "Areas Related to Circles",              "start_page": 154, "unit": "Mensuration" },
+    { "id": 12, "title": "Surface Areas and Volumes",             "start_page": 161, "unit": "Mensuration" },
+    { "id": 13, "title": "Statistics",                            "start_page": 171, "unit": "Statistics & Probability" },
+    { "id": 14, "title": "Probability",                           "start_page": 202, "unit": "Statistics & Probability" },
+    { "id": 15, "title": "Proofs in Mathematics",                 "start_page": 218, "unit": "Appendices (optional)", "label": "Appendix A1" },
+    { "id": 16, "title": "Mathematical Modelling",                "start_page": 239, "unit": "Appendices (optional)", "label": "Appendix A2" }
+  ]
+}
