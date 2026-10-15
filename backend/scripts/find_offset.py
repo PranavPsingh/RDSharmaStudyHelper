@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-path = Path(sys.argv[1] if len(sys.argv) > 1 else "data/textbook.pdf")
+path = Path(sys.argv[1] if len(sys.argv) > 1 else "backend/data/textbook.pdf")
 reader = PdfReader(str(path))
 
 for idx in range(8, min(40, len(reader.pages))):

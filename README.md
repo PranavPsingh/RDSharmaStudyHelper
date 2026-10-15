@@ -10,7 +10,7 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
 
 ## Setup
 
-1. Put the textbook PDF at `data/textbook.pdf`. Keep this repo private: the book is NCERT-copyrighted ("not to be republished").
+1. Put the textbook PDF at `backend/data/textbook.pdf`. Keep this repo private: the book is NCERT-copyrighted ("not to be republished").
 2. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 3. Find the page offset and put it in `.env` as `PDF_PAGE_OFFSET`:
    ```
@@ -30,6 +30,22 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
    npm run dev
    ```
    Open http://localhost:5173.
+
+## Deploying on Vercel
+
+This repository is configured as one Vercel Services project: the `frontend` service is public
+at `/`, and the `backend` service receives public `/api/*` requests. The frontend calls the API
+through same-origin relative URLs, so no service binding is needed; bindings are for server-side
+calls from one service to another.
+
+1. Push the private repository to GitHub with `backend/data/textbook.pdf` committed.
+2. In Vercel, create a project from the repository and keep the repository root as the project
+   root. Vercel discovers each service root from `vercel.json`.
+3. Set `GEMINI_API_KEY` and `PDF_PAGE_OFFSET` as Vercel environment variables. Set
+   `GEMINI_MODEL` only if you want to override the default.
+4. Deploy, then check `/api/chapters` and generate a set in the UI.
+
+For local multi-service testing, use `vercel dev` from the repository root.
 
 ## How the weights work
 
