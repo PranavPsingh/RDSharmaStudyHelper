@@ -21,6 +21,13 @@ def test_diagram_measurements_must_match_question_expressions() -> None:
     assert generator._diagram_missing_measurements(question, matching_svg) == []
 
 
+def test_degree_symbol_matches_degrees_measurement() -> None:
+    question = "In triangle ABC, if angle BAC = 70 degrees and AB = 5 cm, find BC."
+    svg = """<svg viewBox="0 0 100 100"><text>70°</text><text>5 cm</text></svg>"""
+
+    assert generator._diagram_missing_measurements(question, svg) == []
+
+
 def test_required_diagram_is_regenerated_when_initial_diagram_is_missing(monkeypatch) -> None:
     plan = [Slot(1, 6, "easy")]
     question = GeneratedQuestion(

@@ -36,6 +36,7 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
 - `EXCERPT_CHARS` sets the approximate number of textbook characters included per chapter excerpt (default `15000`). Excerpts sample across the chapter; questions may use any topic in that chapter.
 - `MAX_PARALLEL_CALLS` sets the number of concurrent Gemini requests (default `3`). Lower this on the free Gemini tier if you see 429 rate-limit errors.
 - `GEMINI_THINKING_BUDGET` sets Gemini's thinking budget (default `1024`). Set it to a blank value to omit the setting. A budget of `0` is fastest, but makes wrong answers more likely.
+- Temporary Gemini `500`, `502`, `503`, and `504` service/network errors are retried with exponential backoff, up to five attempts per request. If 503 errors continue, wait and retry later or lower `MAX_PARALLEL_CALLS` to `1` in your environment settings to reduce simultaneous requests.
 
 Generated diagrams are checked against measurements stated in their questions. Missing, invalid,
 or inconsistent diagrams are regenerated separately; if a faithful diagram still cannot be

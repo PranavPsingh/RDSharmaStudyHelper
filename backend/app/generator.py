@@ -1,8 +1,11 @@
 import logging
+import random
 import re
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+from typing import TypeVar
 from xml.etree import ElementTree
 
 from google import genai
@@ -18,6 +21,8 @@ from .svg_sanitize import sanitize_svg
 _client: genai.Client | None = None
 _client_lock = Lock()
 _logger = logging.getLogger("uvicorn.error")
+TRANSIENT_RETRY_ATTEMPTS = 5
+T = TypeVar("T")
 
 DIFFICULTY_GUIDE = {
     "easy": "direct application of a single formula or definition; 1 mark; solvable in under a minute.",
@@ -100,7 +105,8 @@ Rules for the SVG:
   right angles with a small square; mark equal sides or angles with tick marks or arcs; use dashed
   lines for auxiliary or hidden edges; mark parallel lines with matching arrows; for coordinate
   or graph questions draw the axes with tick labels. Include every number, unit, and algebraic
-  expression given in the question, copied exactly and placed by the correct segment or point.
+  expression given in the question and place it by the correct segment or point. The degree symbol
+  (°) may be used instead of the word "degrees".
 - Before returning a diagram, check every label against the question. Never omit or alter given
   measurements, invent measurements, or substitute one expression for another. If a faithful
   diagram cannot be made, leave diagram_svg and diagram_alt null.
@@ -156,6 +162,50 @@ def _question_key(question: str) -> str:
     return re.sub(r"\s+", " ", question).strip().casefold()
 
 
+def _is_transient_gemini_error(exc: Exception) -> bool:
+    status_code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if status_code in {500, 502, 503, 504}:
+        return True
+    if isinstance(exc, (TimeoutError, ConnectionError)):
+        return True
+    message = str(exc).upper()
+    return any(
+        marker in message
+        for marker in (
+            "500 INTERNAL",
+            "502 BAD_GATEWAY",
+            "502 BAD GATEWAY",
+            "503 UNAVAILABLE",
+            "503 SERVICE_UNAVAILABLE",
+            "503 SERVICE UNAVAILABLE",
+            "504 DEADLINE_EXCEEDED",
+            "504 GATEWAY_TIMEOUT",
+            "504 GATEWAY TIMEOUT",
+        )
+    )
+
+
+def _with_transient_retries(operation: Callable[[], T], operation_name: str) -> T:
+    for attempt in range(TRANSIENT_RETRY_ATTEMPTS):
+        try:
+            return operation()
+        except Exception as exc:
+            if not _is_transient_gemini_error(exc) or attempt == TRANSIENT_RETRY_ATTEMPTS - 1:
+                raise
+
+            delay = min(2**attempt, 8)
+            delay += random.uniform(0, delay * 0.25)
+            _logger.warning(
+                "%s failed with a transient Gemini error (attempt %d/%d); retrying in %.1f seconds: %s",
+                operation_name,
+                attempt + 1,
+                TRANSIENT_RETRY_ATTEMPTS,
+                delay,
+                exc,
+            )
+            time.sleep(delay)
+
+
 def _question_requires_diagram(question: str) -> bool:
     return re.search(
         r"\b(?:triangle|trapez(?:ium|oid)|quadrilateral|circle|tangent|chord|arc|sector|"
@@ -169,6 +219,8 @@ def _question_requires_diagram(question: str) -> bool:
 
 def _normalize_math_label(value: str) -> str:
     value = value.casefold().replace("−", "-").replace("–", "-").replace("×", "*")
+    value = value.replace("°", " degrees ").replace("º", " degrees ")
+    value = re.sub(r"\bdeg(?:ree)?s?\b", "degrees", value)
     value = re.sub(r"\bsqrt\s*\(", "√(", value)
     value = re.sub(r"\s+", "", value)
     return value.rstrip(".,;:")
@@ -233,7 +285,10 @@ def _generate_batch(
     for _ in range(2):  # one retry if the model skips or repeats a slot
         by_slot: dict[int, GeneratedQuestion] = {}
         try:
-            result = _generate_once(plan, phase=phase, avoid_questions=avoid_questions)
+            result = _with_transient_retries(
+                lambda: _generate_once(plan, phase=phase, avoid_questions=avoid_questions),
+                f"Gemini batch {batch_number}",
+            )
             by_slot = {q.slot: q for q in result.questions}
             if len(result.questions) != len(expected) or set(by_slot) != expected:
                 raise ValueError(f"Expected slots {sorted(expected)}, got {sorted(by_slot)}")
@@ -258,6 +313,8 @@ def _generate_batch(
             last_error = exc
             if len(by_slot) == len(expected):
                 avoid_questions.extend(q.question for q in by_slot.values())
+            if _is_transient_gemini_error(exc):
+                break
     _logger.info(
         "Gemini batch %d failed after %.2f seconds",
         batch_number,
@@ -271,9 +328,10 @@ def _generate_diagram(question: str, batch_number: int) -> tuple[str | None, str
     required_labels = "\n".join(f"- {measurement}" for measurement in measurements) or "- Every stated geometric measurement"
     prompt = f"""Create a black-and-white SVG diagram for this exact question. Do not change or
 paraphrase the question, add measurements, or solve it. Use the question as the only source of
-truth. Put each given measurement exactly as written in the diagram and beside the correct
-segment, point, or angle. Never put a solved/unknown value in the diagram. Return null for both
-fields only if a faithful diagram cannot be made.
+    truth. Put each given measurement beside the correct segment, point, or angle, preserving its
+    number and unit (the degree symbol ° is equivalent to the word "degrees"). Never put a
+    solved/unknown value in the diagram. Return null for both fields only if a faithful diagram cannot
+    be made.
 
 Given measurements that must appear exactly:
 {required_labels}
@@ -290,19 +348,22 @@ Question:
     last_error: Exception | None = None
     for _ in range(2):
         try:
-            response = _client_instance().models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=GeneratedDiagram,
-                    temperature=0.2,
-                    **(
-                        {"thinking_config": types.ThinkingConfig(thinking_budget=GEMINI_THINKING_BUDGET)}
-                        if GEMINI_THINKING_BUDGET is not None
-                        else {}
+            response = _with_transient_retries(
+                lambda: _client_instance().models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        response_schema=GeneratedDiagram,
+                        temperature=0.2,
+                        **(
+                            {"thinking_config": types.ThinkingConfig(thinking_budget=GEMINI_THINKING_BUDGET)}
+                            if GEMINI_THINKING_BUDGET is not None
+                            else {}
+                        ),
                     ),
                 ),
+                f"Diagram generation batch {batch_number}",
             )
             parsed = response.parsed
             if parsed is None or parsed.diagram_svg is None:
@@ -318,6 +379,8 @@ Question:
             return sanitized, parsed.diagram_alt
         except Exception as exc:  # noqa: BLE001
             last_error = exc
+            if _is_transient_gemini_error(exc):
+                break
     _logger.warning("Diagram batch %d regeneration failed: %s", batch_number, last_error)
     raise RuntimeError(f"Could not create a faithful diagram: {last_error}")
 
