@@ -5,7 +5,7 @@ Generates 10 fresh practice questions from the NCERT Class X Mathematics textboo
 - **Difficulty split:** 5 hard, 3 medium, 2 easy (worth 5 / 3 / 1 marks each)
 - **Chapter weighting:** based on the CBSE theory paper (80 marks), plus a small token weight for the two optional appendices
 - **Chapter picker:** dropdown for any of the 14 chapters or the 2 appendices, or "All chapters (random)", which samples in proportion to weightage (max 2 questions per chapter)
-- **Print and answer access:** print all 10 generated questions, and unlock every solution with the answer password. Answer access expires after 30 minutes.
+- **Print and answer access:** print all 10 generated questions, and unlock fully worked, step-by-step solutions with the answer password. Answer access expires after 30 minutes.
 
 Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
 
