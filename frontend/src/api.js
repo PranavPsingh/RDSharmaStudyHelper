@@ -17,3 +17,16 @@ export async function generateQuestions(chapterId) {
   }
   return res.json();
 }
+
+export async function fetchAnswers(answerToken, password) {
+  const res = await fetch("/api/answers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ answer_token: answerToken, password }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || "Could not unlock answers");
+  }
+  return res.json();
+}

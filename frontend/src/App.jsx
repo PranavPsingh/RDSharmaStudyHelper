@@ -1,10 +1,25 @@
 import { useEffect, useState } from "react";
-import { fetchChapters, generateQuestions } from "./api.js";
+import { fetchAnswers, fetchChapters, generateQuestions } from "./api.js";
 
 const ALL = "all";
 
-function QuestionCard({ q }) {
-  const [open, setOpen] = useState(false);
+function QuestionCard({ q, answer, unlocked, onUnlock }) {
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submitPassword(event) {
+    event.preventDefault();
+    setError("");
+    try {
+      await onUnlock(password);
+      setPassword("");
+      setShowPassword(false);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
   return (
     <li className={`card ${q.difficulty}`}>
       <div className="card-head">
@@ -24,14 +39,33 @@ function QuestionCard({ q }) {
           />
         </figure>
       )}
-      <button className="link" onClick={() => setOpen(!open)}>
-        {open ? "Hide answer" : "Show answer"}
-      </button>
-      {open && (
+      {!unlocked && (
+        <>
+          <button className="link answer-control" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? "Cancel" : "Show answer"}
+          </button>
+          {showPassword && (
+            <form className="answer-control password-form" onSubmit={submitPassword}>
+              <label htmlFor={`answer-password-${q.slot}`}>Enter password to unlock all answers</label>
+              <input
+                id={`answer-password-${q.slot}`}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button type="submit">Unlock answers</button>
+              {error && <p className="error">{error}</p>}
+            </form>
+          )}
+        </>
+      )}
+      {unlocked && answer && (
         <div className="answer">
-          <pre>{q.solution}</pre>
+          <pre>{answer.solution}</pre>
           <p>
-            <strong>Answer:</strong> {q.final_answer}
+            <strong>Answer:</strong> {answer.final_answer}
           </p>
         </div>
       )}
@@ -45,6 +79,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [answers, setAnswers] = useState(null);
 
   useEffect(() => {
     fetchChapters().then(setChapters).catch((e) => setError(e.message));
@@ -56,11 +91,17 @@ export default function App() {
     try {
       const chapterId = selected === ALL ? null : Number(selected);
       setResult(await generateQuestions(chapterId));
+      setAnswers(null);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function onUnlock(password) {
+    const response = await fetchAnswers(result.answer_token, password);
+    setAnswers(Object.fromEntries(response.answers.map((answer) => [answer.slot, answer])));
   }
 
   return (
@@ -86,12 +127,23 @@ export default function App() {
 
       {result && (
         <>
-          <p className="summary">
-            {result.questions.length} questions · {result.total_marks} marks total
-          </p>
+          <div className="result-actions">
+            <p className="summary">
+              {result.questions.length} questions · {result.total_marks} marks total
+            </p>
+            <button className="print-button" onClick={() => window.print()}>
+              Print questions
+            </button>
+          </div>
           <ol className="questions">
             {result.questions.map((q) => (
-              <QuestionCard key={q.slot} q={q} />
+              <QuestionCard
+                key={q.slot}
+                q={q}
+                answer={answers?.[q.slot]}
+                unlocked={Boolean(answers)}
+                onUnlock={onUnlock}
+              />
             ))}
           </ol>
         </>

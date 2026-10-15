@@ -5,3 +5,4 @@ pypdf>=5.0
 python-dotenv>=1.0
 pydantic>=2.7
 defusedxml>=0.7.1
+cryptography>=42.0
