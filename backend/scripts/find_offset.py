@@ -3,6 +3,8 @@
 Usage (from the repo root):
     python backend/scripts/find_offset.py [path/to/textbook.pdf]
 
+The default PDF path is backend/data/textbook.pdf.
+
 Put the printed number in PDF_PAGE_OFFSET in .env.
 """
 import sys
@@ -10,7 +12,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-path = Path(sys.argv[1] if len(sys.argv) > 1 else "data/textbook.pdf")
+path = Path(sys.argv[1] if len(sys.argv) > 1 else "backend/data/textbook.pdf")
 reader = PdfReader(str(path))
 
 for idx in range(8, min(40, len(reader.pages))):

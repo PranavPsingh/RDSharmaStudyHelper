@@ -96,6 +96,17 @@ select, button {
 
 .question { margin: 0 0 8px; line-height: 1.5; }
 
+.diagram { margin: 8px 0; }
+.diagram img {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
 button.link {
   background: none;
   border: none;

@@ -10,7 +10,7 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
 
 ## Setup
 
-1. Put the textbook PDF at `data/textbook.pdf`. Keep this repo private: the book is NCERT-copyrighted ("not to be republished").
+1. Put the textbook PDF at `backend/data/textbook.pdf`. Keep this repo private: the book is NCERT-copyrighted ("not to be republished").
 2. Copy `.env.example` to `.env` and set `GEMINI_API_KEY`.
 3. Find the page offset and put it in `.env` as `PDF_PAGE_OFFSET`:
    ```
@@ -30,6 +30,31 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
    npm run dev
    ```
    Open http://localhost:5173.
+
+## Gemini generation settings
+
+- `EXCERPT_CHARS` sets the approximate number of textbook characters included per chapter excerpt (default `15000`). Excerpts sample across the chapter; questions may use any topic in that chapter.
+- `MAX_PARALLEL_CALLS` sets the number of concurrent Gemini requests (default `3`). Lower this on the free Gemini tier if you see 429 rate-limit errors.
+- `GEMINI_THINKING_BUDGET` sets Gemini's thinking budget (default `1024`). Set it to a blank value to omit the setting. A budget of `0` is fastest, but makes wrong answers more likely.
+- Temporary Gemini `500`, `502`, `503`, and `504` service/network errors are retried with exponential backoff, up to five attempts per request. If 503 errors continue, wait and retry later or lower `MAX_PARALLEL_CALLS` to `1` in your environment settings to reduce simultaneous requests.
+
+Generated diagrams are checked against measurements stated in their questions. Missing, invalid,
+or inconsistent diagrams are regenerated separately; if a faithful diagram still cannot be
+produced for a question that needs one, generation fails rather than returning a misleading figure.
+
+## Deploying on Vercel
+
+1. Push this repository to GitHub as a **private** repository, with `backend/data/textbook.pdf` committed.
+2. In Vercel, select **Add New -> Project**, import the repository, and leave **Root Directory** set to the repository root.
+3. Under **Settings -> Build and Deployment -> Framework Preset**, select **Services**. Redeploy if the initial build ran before you changed this setting.
+4. Under **Settings -> Environment Variables**, set `GEMINI_API_KEY` and `PDF_PAGE_OFFSET`. Optionally set `GEMINI_MODEL`, `MAX_PARALLEL_CALLS`, `GEMINI_THINKING_BUDGET`, and `EXCERPT_CHARS`.
+5. Open `<url>/api/chapters` to verify the API, then generate a question set in the UI. Generation timing logs appear in Vercel runtime logs.
+
+Troubleshooting:
+
+- If the API returns `Textbook PDF not found`, the PDF was not bundled with the backend service. An unverified possible workaround is to add `"functions": { "app/main.py": { "includeFiles": "data/**" } }` inside the `backend` service in `vercel.json`.
+- If Vercel rejects the `entrypoint`, remove that line from the `backend` service in `vercel.json` so it auto-detects `app/main.py`.
+- The production URL is public by default, so anyone with it can use the Gemini API key's quota. Review Vercel Deployment Protection settings and set a quota or budget limit in Google AI Studio.
 
 ## How the weights work
 

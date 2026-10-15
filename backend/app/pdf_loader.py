@@ -4,7 +4,7 @@ from functools import lru_cache
 from pypdf import PdfReader
 
 from .chapters import BY_ID
-from .config import MAX_CHARS_PER_CHAPTER, PDF_PAGE_OFFSET, TEXTBOOK_PDF
+from .config import EXCERPT_CHARS, PDF_PAGE_OFFSET, TEXTBOOK_PDF
 
 
 @lru_cache(maxsize=1)
@@ -31,4 +31,24 @@ def chapter_text(chapter_id: int) -> str:
         text = re.sub(r"\n{3,}", "\n\n", text)
         parts.append(text.strip())
 
-    return "\n\n".join(parts)[:MAX_CHARS_PER_CHAPTER]
+    return "\n\n".join(parts)
+
+
+def sample_text(text: str, limit: int = EXCERPT_CHARS, phase: float = 0.0, windows: int = 6) -> str:
+    if len(text) <= limit:
+        return text
+
+    size = limit // windows
+    span = len(text) - size
+    slices = []
+    for j in range(windows):
+        start = int((j + phase) * span / windows)
+        newline = text.find("\n", start, start + 300)
+        if newline != -1:
+            start = newline + 1
+        slices.append(text[start : start + size].strip())
+    return "\n...\n".join(slices)
+
+
+def chapter_excerpt(chapter_id: int, phase: float = 0.0) -> str:
+    return sample_text(chapter_text(chapter_id), phase=phase)
