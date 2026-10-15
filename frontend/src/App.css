@@ -1,0 +1,111 @@
+:root {
+  --bg: #f7f7f5;
+  --fg: #1c1c1a;
+  --card: #ffffff;
+  --border: #e2e2dc;
+  --easy: #2e7d32;
+  --medium: #b26a00;
+  --hard: #c62828;
+  --accent: #2b59c3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #161616;
+    --fg: #ececea;
+    --card: #1f1f1e;
+    --border: #333330;
+    --easy: #6fcf74;
+    --medium: #f0b45a;
+    --hard: #ef7b7b;
+    --accent: #7da2f5;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 20px; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+select, button {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+}
+
+.controls button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.controls button:disabled { opacity: 0.6; cursor: wait; }
+
+.error { color: var(--hard); }
+.summary { color: var(--fg); opacity: 0.7; }
+
+.questions { list-style: none; padding: 0; display: grid; gap: 12px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.card.easy { border-left-color: var(--easy); }
+.card.medium { border-left-color: var(--medium); }
+.card.hard { border-left-color: var(--hard); }
+
+.card-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.meta { font-size: 0.85rem; opacity: 0.7; }
+
+.badge {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.badge.easy { color: var(--easy); }
+.badge.medium { color: var(--medium); }
+.badge.hard { color: var(--hard); }
+
+.question { margin: 0 0 8px; line-height: 1.5; }
+
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.answer pre {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 8px 0;
+}
