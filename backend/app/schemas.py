@@ -6,10 +6,17 @@ class GeneratedQuestion(BaseModel):
     question: str
     solution: str
     final_answer: str
+    diagram_svg: str | None = None
+    diagram_alt: str | None = None
 
 
 class GeneratedSet(BaseModel):
     questions: list[GeneratedQuestion]
+
+
+class GeneratedDiagram(BaseModel):
+    diagram_svg: str | None = None
+    diagram_alt: str | None = None
 
 
 class GenerateRequest(BaseModel):
@@ -28,6 +35,8 @@ class QuestionOut(BaseModel):
     question: str
     solution: str
     final_answer: str
+    diagram_svg: str | None = None
+    diagram_alt: str | None = None
 
 
 class GenerateResponse(BaseModel):

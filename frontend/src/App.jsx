@@ -16,6 +16,14 @@ function QuestionCard({ q }) {
       <p className="question">
         {q.slot}. {q.question}
       </p>
+      {q.diagram_svg && (
+        <figure className="diagram">
+          <img
+            src={`data:image/svg+xml;utf8,${encodeURIComponent(q.diagram_svg)}`}
+            alt={q.diagram_alt || "Diagram for the question"}
+          />
+        </figure>
+      )}
       <button className="link" onClick={() => setOpen(!open)}>
         {open ? "Hide answer" : "Show answer"}
       </button>

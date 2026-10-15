@@ -1,12 +1,31 @@
+import threading
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .chapters import BY_ID, CHAPTERS
 from .generator import generate_questions
 from .planner import build_plan
+from .pdf_loader import chapter_text
 from .schemas import GenerateRequest, GenerateResponse
 
-app = FastAPI(title="Class X Maths Study Helper")
+
+def _warm_chapter_cache() -> None:
+    for chapter in CHAPTERS:
+        try:
+            chapter_text(chapter.id)
+        except Exception:  # PDF cache warming is best-effort during startup.
+            pass
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    threading.Thread(target=_warm_chapter_cache, daemon=True).start()
+    yield
+
+
+app = FastAPI(title="Class X Maths Study Helper", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
