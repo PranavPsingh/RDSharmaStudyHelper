@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from backend.app import generator
@@ -39,7 +41,7 @@ def test_generate_questions_regenerates_duplicate_text_across_batches(monkeypatc
 
     monkeypatch.setattr(generator, "_generate_batch", generate_batch)
 
-    result = generator.generate_questions(plan)
+    result = asyncio.run(generator.generate_questions(plan))
 
     assert [question.slot for question in result] == [1, 2, 3, 4]
     assert len({generator._question_key(question.question) for question in result}) == 4
@@ -62,4 +64,4 @@ def test_generate_questions_fails_instead_of_returning_duplicates(monkeypatch) -
     monkeypatch.setattr(generator, "_generate_batch", generate_batch)
 
     with pytest.raises(RuntimeError, match="repeated questions"):
-        generator.generate_questions(plan)
+        asyncio.run(generator.generate_questions(plan))
