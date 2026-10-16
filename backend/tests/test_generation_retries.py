@@ -66,3 +66,25 @@ def test_raises_after_transient_retry_limit(monkeypatch) -> None:
 
     assert calls == generator.TRANSIENT_RETRY_ATTEMPTS
     assert delays == [1, 2, 4, 8]
+
+
+def test_diagram_transient_retries_are_capped_at_two(monkeypatch) -> None:
+    delays = []
+    calls = 0
+    monkeypatch.setattr(generator.random, "uniform", _no_jitter)
+    monkeypatch.setattr(generator.time, "sleep", delays.append)
+
+    def request() -> None:
+        nonlocal calls
+        calls += 1
+        raise TemporaryGeminiError()
+
+    with pytest.raises(TemporaryGeminiError):
+        generator._with_transient_retries(
+            request,
+            "diagram request",
+            attempts=generator.DIAGRAM_TRANSIENT_RETRY_ATTEMPTS,
+        )
+
+    assert calls == 2
+    assert delays == [1]

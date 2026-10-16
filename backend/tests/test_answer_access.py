@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from fastapi import HTTPException
 
@@ -27,10 +29,18 @@ def test_answers_are_withheld_until_password_is_verified(monkeypatch) -> None:
         _question(1, "Working 1", "Answer 1"),
         _question(2, "Working 2", "Answer 2"),
     ]
-    monkeypatch.setattr(main, "build_plan", lambda chapter_id: [])
-    monkeypatch.setattr(main, "generate_questions", lambda plan: questions)
+    def build_plan(chapter_id):
+        del chapter_id
+        return []
 
-    generated = main.generate(GenerateRequest())
+    monkeypatch.setattr(main, "build_plan", build_plan)
+    async def generate_questions(plan):
+        del plan
+        return questions
+
+    monkeypatch.setattr(main, "generate_questions", generate_questions)
+
+    generated = asyncio.run(main.generate(GenerateRequest()))
 
     assert len(generated.questions) == 2
     assert "solution" not in generated.questions[0].model_dump()

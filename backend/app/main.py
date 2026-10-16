@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import json
 import threading
 from contextlib import asynccontextmanager
 from secrets import compare_digest
@@ -67,13 +66,13 @@ def list_chapters():
 
 
 @app.post("/api/generate", response_model=GenerateResponse)
-def generate(req: GenerateRequest):
+async def generate(req: GenerateRequest):
     if req.chapter_id is not None and req.chapter_id not in BY_ID:
         raise HTTPException(status_code=400, detail=f"Unknown chapter {req.chapter_id}")
 
     plan = build_plan(req.chapter_id)
     try:
-        questions = generate_questions(plan)
+        questions = await generate_questions(plan)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except RuntimeError as exc:

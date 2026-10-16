@@ -39,9 +39,16 @@ Stack: FastAPI + `google-genai` (backend), React + Vite (frontend).
 - `GEMINI_THINKING_BUDGET` sets Gemini's thinking budget (default `1024`). Set it to a blank value to omit the setting. A budget of `0` is fastest, but makes wrong answers more likely.
 - Temporary Gemini `500`, `502`, `503`, and `504` service/network errors are retried with exponential backoff, up to five attempts per request. If 503 errors continue, wait and retry later or lower `MAX_PARALLEL_CALLS` to `1` in your environment settings to reduce simultaneous requests.
 
-Generated diagrams are checked against measurements stated in their questions. Missing, invalid,
-or inconsistent diagrams are regenerated separately; if a faithful diagram still cannot be
-produced for a question that needs one, generation fails rather than returning a misleading figure.
+Generated diagrams are checked against measurements stated in their questions and reviewed by a
+separate model call to verify that the figure corresponds to the question, including whether labels
+and measurements belong to the correct parts. They do not need to be to scale. A rejected diagram
+gets at most one redraw with the reviewer's feedback (two diagram candidates total). Diagram calls
+do not override the model's thinking configuration and retry transient service errors at most once,
+limiting extra usage. If Gemini rejects an optional review request, a diagram that passes SVG
+sanitization and measurement checks is kept rather than failing generation. If a diagram still does
+not correspond to a question that needs one, generation fails rather than returning a misleading
+figure. Question batches and diagram checks run concurrently, with each stage capped at
+`MAX_PARALLEL_CALLS` simultaneous tasks.
 
 ## Deploying on Vercel
 

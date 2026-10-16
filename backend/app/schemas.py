@@ -19,6 +19,11 @@ class GeneratedDiagram(BaseModel):
     diagram_alt: str | None = None
 
 
+class DiagramReview(BaseModel):
+    faithful: bool
+    issues: list[str]
+
+
 class GenerateRequest(BaseModel):
     # None means "all chapters, picked at random by CBSE weightage".
     chapter_id: int | None = None
